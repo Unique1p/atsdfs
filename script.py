@@ -16,15 +16,16 @@ def send_discord_message(message: str):
 
 
 def get_rebo_algolia_count():
+
     url = (
-        "https://240m1w8agr-dsn.algolia.net/1/indexes/"
-        "private_objects_rent_sale_nl_status_asc/query"
+        "https://240m1w8agr-dsn.algolia.net/1/indexes/private_objects_rent_sale_nl_status_asc/query"
         "?x-algolia-agent=Algolia%20for%20JavaScript%20(4.24.0)%3B%20Browser"
         "&x-algolia-api-key=055822c5312edb8cf91a483936751fac"
         "&x-algolia-application-id=240M1W8AGR"
     )
 
-    payload_obj = {
+    # Payload moet EXACT zijn zoals de browser verzendt
+    payload = {
         "query": "",
         "facetFilters": ["type_facet:rent||rent"],
         "facets": ["*"],
@@ -34,19 +35,25 @@ def get_rebo_algolia_count():
         "maxValuesPerFacet": 99999999
     }
 
-    # EXACT zoals browser: application/x-www-form-urlencoded
-    encoded_payload = "params=" + urllib.parse.quote(json.dumps(payload_obj))
+    # Algolia verwacht:
+    # params=<URLEncoded JSON>
+    encoded_payload = "params=" + urllib.parse.quote(json.dumps(payload))
 
     headers = {
         "User-Agent": USER_AGENT,
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/x-www-form-urlencoded"
     }
 
     print("Ophalen Algolia data...")
-    r = requests.post(url, data=encoded_payload, headers=headers, timeout=10)
-    r.raise_for_status()
-    data = r.json()
+    r = requests.post(url, data=encoded_payload, headers=headers, timeout=15)
 
+    if r.status_code != 200:
+        print("❌ Fout ontvangen:", r.text)
+        r.raise_for_status()
+
+    data = r.json()
+    print("Algolia response keys:", data.keys())
+    
     return data.get("nbHits", 0)
 
 
