@@ -1,9 +1,16 @@
 import os
 import requests
+import json
 
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 STATE_FILE = "last_count.txt"
-USER_AGENT = "Mozilla/5.0 (compatible; ReboChecker/1.0; +https://example.org/)"
+
+# Gebruikersagent van Chrome
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/142.0.0.0 Safari/537.36"
+)
 
 def send_discord_message(message: str):
     if not WEBHOOK_URL:
@@ -13,36 +20,34 @@ def send_discord_message(message: str):
 
 
 def get_rebo_algolia_count():
-    ALGOLIA_APP_ID = "240M1W8AGR"
-    ALGOLIA_API_KEY = "055822c5312edb8cf91a483936751fac"
+    # Dit is exact dezelfde URL die Rebo front-end gebruikt
+    url = (
+        "https://240m1w8agr-dsn.algolia.net/1/indexes/"
+        "private_objects_rent_sale_nl_status_asc/query"
+        "?x-algolia-agent=Algolia%20for%20JavaScript%20(4.24.0)%3B%20Browser"
+        "&x-algolia-api-key=055822c5312edb8cf91a483936751fac"
+        "&x-algolia-application-id=240M1W8AGR"
+    )
 
-    url = "https://240m1w8agr-dsn.algolia.net/1/indexes/private_objects_rent_sale_nl_status_asc/query"
+    # Precies dezelfde payload
+    payload = {
+        "params": (
+            "query=&hitsPerPage=500&page=0&"
+            "facetFilters=%5B%22transactionType:rent%22%5D"
+        )
+    }
 
     headers = {
         "User-Agent": USER_AGENT,
-        "X-Algolia-Application-Id": ALGOLIA_APP_ID,
-        "X-Algolia-API-Key": ALGOLIA_API_KEY,
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "params": "query=&hitsPerPage=500&page=0&facetFilters=%5B%22transactionType:rent%22%5D"
+        "Content-Type": "application/json",
     }
 
     print("Ophalen Algolia data...")
-    r = requests.post(url, json=payload, headers=headers, timeout=10)
+    r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=10)
     r.raise_for_status()
     data = r.json()
 
     return data.get("nbHits", 0)
-
-
-def get_current_count():
-    try:
-        return get_rebo_algolia_count()
-    except Exception as e:
-        print("Algolia mislukt:", e)
-        return 0
 
 
 def load_last_count():
@@ -62,7 +67,7 @@ def save_last_count(count):
 def main():
     print("Start controle REBO ...")
 
-    current = get_current_count()
+    current = get_rebo_algolia_count()
     last = load_last_count()
 
     print(f"Actueel aantal: {current}")
@@ -79,6 +84,7 @@ def main():
             f"🔔 **REBO wijziging gedetecteerd!**\n"
             f"Er zijn nu **{current}** huurwoningen ({abs(diff)} {sign})."
         )
+
         print(message)
         send_discord_message(message)
 
