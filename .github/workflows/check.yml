@@ -2,14 +2,22 @@ name: Check Rebo
 
 on:
   schedule:
-    - cron: "*/2 * * * *"   # elke 2 minuten
+    - cron: "*/2 * * * *"
   workflow_dispatch:
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
+
+      # Bewaar state tussen runs (last_count.txt)
+      - name: Restore state
+        uses: actions/cache@v3
+        with:
+          path: last_count.txt
+          key: rebo-state
 
       - uses: actions/setup-python@v4
         with:
@@ -17,8 +25,13 @@ jobs:
 
       - run: pip install requests beautifulsoup4
 
-      # Zet secret in environment
+      # Secret met webhook URL
       - run: echo "WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}" >> $GITHUB_ENV
 
-      # Run Python script
       - run: python script.py
+
+      - name: Save state
+        uses: actions/cache@v3
+        with:
+          path: last_count.txt
+          key: rebo-state
