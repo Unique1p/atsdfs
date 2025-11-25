@@ -1,0 +1,24 @@
+name: Check Rebo
+
+on:
+  schedule:
+    - cron: "*/2 * * * *"   # elke 2 minuten
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests beautifulsoup4
+
+      # Zet secret in environment
+      - run: echo "WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}" >> $GITHUB_ENV
+
+      # Run Python script
+      - run: python script.py
