@@ -1,4 +1,4 @@
-name: Check
+name: Check Rebo
 
 on:
   schedule:
@@ -10,34 +10,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      # STATE BESTAND RESTOREN (laatste telling)
-      - name: Restore state
+      # Restore state
+      - name: Restore last count
         uses: actions/cache@v3
         with:
           path: last_count.txt
           key: rebo-state
           restore-keys: rebo-state
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: pip install requests
+      - run: pip install requests
 
-      # Secret in ENV zetten
-      - name: Set webhook env
+      # Inject WEBHOOK_URL environment variable
+      - name: Set webhook secret
         run: echo "WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}" >> $GITHUB_ENV
 
       - name: Run script
         run: python script.py
 
-      # STATE OPNIEUW OPSLAAN
-      - name: Save state
+      # Save updated state
+      - name: Save last count
         uses: actions/cache@v3
         with:
           path: last_count.txt
