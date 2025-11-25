@@ -1,10 +1,8 @@
 import os
 import requests
 import json
-import urllib.parse
 
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
-STATE_FILE = "last_count.txt"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
 
 
@@ -51,44 +49,15 @@ def get_rebo_algolia_count():
     return data.get("nbHits", 0)
 
 
-def load_last_count():
-    if not os.path.exists(STATE_FILE):
-        return None
-    try:
-        return int(open(STATE_FILE).read().strip())
-    except:
-        return None
-
-
-def save_last_count(count):
-    with open(STATE_FILE, "w") as f:
-        f.write(str(count))
-
-
 def main():
-    print("Start controle REBO ...")
+    print("Start TEST controle REBO ...")
 
     current = get_rebo_algolia_count()
-    last = load_last_count()
 
-    print(f"Actueel aantal: {current}")
-    print(f"Vorig aantal : {last}")
+    print(f"Actueel aantal volgens Algolia: {current}")
 
-    if last is None:
-        save_last_count(current)
-        return
-
-    if current != last:
-        diff = current - last
-        sign = "meer" if diff > 0 else "minder"
-        message = (
-            f"🔔 **REBO wijziging gedetecteerd!**\n"
-            f"Er zijn nu **{current}** huurwoningen ({abs(diff)} {sign})."
-        )
-        print(message)
-        send_discord_message(message)
-
-    save_last_count(current)
+    message = f"🔔 **TEST – actuele REBO telling**\nAantal huurwoningen volgens Algolia: **{current}**"
+    send_discord_message(message)
 
 
 if __name__ == "__main__":
