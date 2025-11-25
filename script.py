@@ -16,7 +16,6 @@ def send_discord_message(message: str):
 
 
 def get_rebo_algolia_count():
-
     url = (
         "https://240m1w8agr-dsn.algolia.net/1/indexes/private_objects_rent_sale_nl_status_asc/query"
         "?x-algolia-agent=Algolia%20for%20JavaScript%20(4.24.0)%3B%20Browser"
@@ -24,20 +23,20 @@ def get_rebo_algolia_count():
         "&x-algolia-application-id=240M1W8AGR"
     )
 
-    # Payload moet EXACT zijn zoals de browser verzendt
-    payload = {
+    # Payload moet als querystring
+    params_dict = {
         "query": "",
-        "facetFilters": ["type_facet:rent||rent"],
-        "facets": ["*"],
+        "facetFilters": '["type_facet:rent||rent"]',
+        "facets": '["*"]',
         "hitsPerPage": 21,
         "page": 0,
         "sortFacetValuesBy": "alpha",
         "maxValuesPerFacet": 99999999
     }
 
-    # Algolia verwacht:
-    # params=<URLEncoded JSON>
-    encoded_payload = "params=" + urllib.parse.quote(json.dumps(payload))
+    encoded_payload = "params=" + urllib.parse.quote(
+        "&".join(f"{k}={v}" for k, v in params_dict.items())
+    )
 
     headers = {
         "User-Agent": USER_AGENT,
@@ -53,7 +52,7 @@ def get_rebo_algolia_count():
 
     data = r.json()
     print("Algolia response keys:", data.keys())
-    
+
     return data.get("nbHits", 0)
 
 
