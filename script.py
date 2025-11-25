@@ -34,7 +34,8 @@ def get_rebo_algolia_count():
         "maxValuesPerFacet": 99999999
     }
 
-    encoded = "params=" + urllib.parse.quote(json.dumps(payload_obj))
+    # EXACT zoals browser: application/x-www-form-urlencoded
+    encoded_payload = "params=" + urllib.parse.quote(json.dumps(payload_obj))
 
     headers = {
         "User-Agent": USER_AGENT,
@@ -42,7 +43,7 @@ def get_rebo_algolia_count():
     }
 
     print("Ophalen Algolia data...")
-    r = requests.post(url, data=encoded, headers=headers, timeout=10)
+    r = requests.post(url, data=encoded_payload, headers=headers, timeout=10)
     r.raise_for_status()
     data = r.json()
 
