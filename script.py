@@ -1,5 +1,7 @@
 import os
 import requests
+import json
+import urllib.parse
 
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 STATE_FILE = "last_count.txt"
@@ -22,16 +24,17 @@ def get_rebo_algolia_count():
         "&x-algolia-application-id=240M1W8AGR"
     )
 
-    # EXACHTE payload van rebogroep.nl
-    payload = {
+    payload_obj = {
         "query": "",
-        "facetFilters": '["type_facet:rent||rent"]',
-        "facets": '["*"]',
-        "hitsPerPage": "21",
-        "page": "0",
+        "facetFilters": ["type_facet:rent||rent"],
+        "facets": ["*"],
+        "hitsPerPage": 21,
+        "page": 0,
         "sortFacetValuesBy": "alpha",
-        "maxValuesPerFacet": "99999999"
+        "maxValuesPerFacet": 99999999
     }
+
+    encoded = "params=" + urllib.parse.quote(json.dumps(payload_obj))
 
     headers = {
         "User-Agent": USER_AGENT,
@@ -39,7 +42,7 @@ def get_rebo_algolia_count():
     }
 
     print("Ophalen Algolia data...")
-    r = requests.post(url, data=payload, headers=headers, timeout=10)
+    r = requests.post(url, data=encoded, headers=headers, timeout=10)
     r.raise_for_status()
     data = r.json()
 
