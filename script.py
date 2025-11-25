@@ -23,28 +23,23 @@ def get_rebo_algolia_count():
         "&x-algolia-application-id=240M1W8AGR"
     )
 
-    # Payload moet als querystring
-    params_dict = {
+    payload = {
         "query": "",
-        "facetFilters": '["type_facet:rent||rent"]',
-        "facets": '["*"]',
+        "facetFilters": ["type_facet:rent||rent"],
+        "facets": ["*"],
         "hitsPerPage": 21,
         "page": 0,
         "sortFacetValuesBy": "alpha",
         "maxValuesPerFacet": 99999999
     }
 
-    encoded_payload = "params=" + urllib.parse.quote(
-        "&".join(f"{k}={v}" for k, v in params_dict.items())
-    )
-
     headers = {
         "User-Agent": USER_AGENT,
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/json"
     }
 
     print("Ophalen Algolia data...")
-    r = requests.post(url, data=encoded_payload, headers=headers, timeout=15)
+    r = requests.post(url, json=payload, headers=headers, timeout=15)
 
     if r.status_code != 200:
         print("❌ Fout ontvangen:", r.text)
