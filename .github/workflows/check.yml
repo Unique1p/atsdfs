@@ -12,13 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Restore state
-      - name: Restore last count
+      - name: Restore state
         uses: actions/cache@v3
         with:
           path: last_count.txt
-          key: rebo-state
-          restore-keys: rebo-state
+          key: rebo-state-${{ github.run_id }}
+          restore-keys: rebo-state-
 
       - uses: actions/setup-python@v4
         with:
@@ -26,16 +25,13 @@ jobs:
 
       - run: pip install requests
 
-      # Inject WEBHOOK_URL environment variable
       - name: Set webhook secret
         run: echo "WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}" >> $GITHUB_ENV
 
-      - name: Run script
-        run: python script.py
+      - run: python script.py
 
-      # Save updated state
-      - name: Save last count
+      - name: Save state
         uses: actions/cache@v3
         with:
           path: last_count.txt
-          key: rebo-state
+          key: rebo-state-${{ github.run_id }}
