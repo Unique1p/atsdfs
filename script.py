@@ -1,6 +1,5 @@
 import os
 import requests
-import json
 
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 STATE_FILE = "last_count.txt"
@@ -23,14 +22,15 @@ def get_rebo_algolia_count():
         "&x-algolia-application-id=240M1W8AGR"
     )
 
+    # EXACHTE payload van rebogroep.nl
     payload = {
         "query": "",
-        "facetFilters": ["type_facet:rent||rent"],
-        "facets": ["*"],
-        "hitsPerPage": 21,
-        "page": 0,
+        "facetFilters": '["type_facet:rent||rent"]',
+        "facets": '["*"]',
+        "hitsPerPage": "21",
+        "page": "0",
         "sortFacetValuesBy": "alpha",
-        "maxValuesPerFacet": 99999999
+        "maxValuesPerFacet": "99999999"
     }
 
     headers = {
@@ -39,8 +39,52 @@ def get_rebo_algolia_count():
     }
 
     print("Ophalen Algolia data...")
-    r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=10)
+    r = requests.post(url, data=payload, headers=headers, timeout=10)
     r.raise_for_status()
     data = r.json()
 
     return data.get("nbHits", 0)
+
+
+def load_last_count():
+    if not os.path.exists(STATE_FILE):
+        return None
+    try:
+        return int(open(STATE_FILE).read().strip())
+    except:
+        return None
+
+
+def save_last_count(count):
+    with open(STATE_FILE, "w") as f:
+        f.write(str(count))
+
+
+def main():
+    print("Start controle REBO ...")
+
+    current = get_rebo_algolia_count()
+    last = load_last_count()
+
+    print(f"Actueel aantal: {current}")
+    print(f"Vorig aantal : {last}")
+
+    if last is None:
+        save_last_count(current)
+        return
+
+    if current != last:
+        diff = current - last
+        sign = "meer" if diff > 0 else "minder"
+        message = (
+            f"🔔 **REBO wijziging gedetecteerd!**\n"
+            f"Er zijn nu **{current}** huurwoningen ({abs(diff)} {sign})."
+        )
+        print(message)
+        send_discord_message(message)
+
+    save_last_count(current)
+
+
+if __name__ == "__main__":
+    main()
