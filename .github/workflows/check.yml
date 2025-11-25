@@ -1,4 +1,4 @@
-name: Check Rebo
+name: Check
 
 on:
   schedule:
